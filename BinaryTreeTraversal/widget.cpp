@@ -45,6 +45,7 @@ void Widget::setRightTopLayout() {
     this->rightTopLayout->addWidget(this->btnPreOrder);
     this->rightTopLayout->addWidget(this->btnInOrder);
     this->rightTopLayout->addWidget(this->btnPostOrder);
+    this->rightTopLayout->addWidget(this->btnLevelOrder);
 }
 void Widget::setRightLayout() {
     this->rightLayout = new QVBoxLayout();
@@ -73,6 +74,13 @@ void Widget::setLabel() {
     this->labelCnt = new QLabel("Nodes count:");
     this->labelNode = new QLabel("node value:");
     this->labelEdge = new QLabel("edges info:");
+    this->labelSeqName = new QLabel(this);
+    QFont ft;
+    ft.setPointSize(20);
+    ft.setBold(1);
+    this->labelSeqName->setFont(ft);
+    this->labelSeqName->move(200, 500);
+    this->labelSeqName->setFixedSize(320, 80);
 }
 
 // 设置信息输入的文本框
@@ -154,19 +162,32 @@ void Widget::change() {
 void Widget::setButton() {
     this->btnPreOrder = new QPushButton("Preorder Traversal");
     connect(this->btnPreOrder, &QPushButton::clicked, this, [=](){
+        this->seq.clear();
+        this->labelSeqName->setText(tr("Preorder Sequence:"));
         this->preOrder();
     });
 
 
     this->btnInOrder = new QPushButton("Inorder Traversal");
     connect(this->btnInOrder, &QPushButton::clicked, this, [=](){
+        this->seq.clear();
+        this->labelSeqName->setText(tr("Inorder Sequence:"));
         this->inOrder();
     });
 
 
     this->btnPostOrder = new QPushButton("Postorder Traversal");
     connect(this->btnPostOrder, &QPushButton::clicked, this, [=](){
+        this->labelSeqName->setText(tr("Postorder Sequence:"));
+        this->seq.clear();
         this->postOrder();
+    });
+
+    this->btnLevelOrder = new QPushButton("Levelorder Traversal");
+    connect(this->btnLevelOrder, &QPushButton::clicked, this, [=](){
+        this->labelSeqName->setText(tr("Levelorder Sequence:"));
+        this->seq.clear();
+        this->levelOrder();
     });
 
 }
@@ -227,6 +248,7 @@ void Widget::preOrder() {
 }
 void Widget::preOrder(int u) {
     int x = map[u].first, y = map[u].second;
+    this->seq.push_back(u);
     cx = x, cy = y;
 //    qDebug() << cx <<" "<< cy;
     // ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
@@ -247,12 +269,14 @@ void Widget::inOrder() {
 }
 void Widget::inOrder(int u) {
     if (u == 0) return;
+
     int left = 0, right = 0;
     if (edges[u].size() >= 1) left = edges[u][0];
     if (edges[u].size() >= 2) right = edges[u][1];
     inOrder(left);
 
 
+    this->seq.push_back(u);
     int x = map[u].first, y = map[u].second;
     cx = x, cy = y;
     this->repaint();
@@ -281,10 +305,37 @@ void Widget::postOrder(int u) {
 
     postOrder(right);
 
+    this->seq.push_back(u);
     int x = map[u].first, y = map[u].second;
     cx = x, cy = y;
     this->repaint();
     Sleep(1000);
+}
+
+
+
+void Widget::levelOrder() {
+
+    this->repaint();
+    QQueue<int> q;
+    q.push_back(root);
+    while (!q.empty()) {
+        int u = q.front();
+        this->seq.push_back(u);
+        q.pop_front();
+//        if (u == 0) continue;
+        int x = map[u].first, y = map[u].second;
+        int left = 0, right = 0;
+        if (edges[u].size() >= 1) left = edges[u][0];
+        if (edges[u].size() >= 2) right = edges[u][1];
+        if (left) q.push_back(left);
+        if (right) q.push_back(right);
+        cx = x, cy = y;
+        this->repaint();
+        Sleep(1000);
+    }
+    cx = -1, cy = -1;
+    this->repaint();
 }
 
 void Widget::getRoot() {
@@ -295,7 +346,14 @@ void Widget::getRoot() {
     s = qsl.first();
     this->root = s.toInt();
 }
-
+void Widget::drawSeq(QPainter& p) {
+    int x0 = 200, y0 = 580;
+    for (auto u : this->seq) {
+        int val = this->val[u];
+        this->drawNode(p, x0, y0, val, 40);
+        x0 += 70;
+    }
+}
 void Widget::paintEvent(QPaintEvent*) {
     QPen pen;
     pen.setWidth(3);
@@ -310,6 +368,7 @@ void Widget::paintEvent(QPaintEvent*) {
 
     this->getRoot();
     if (this->edges[root].size() >= 1) drawTree(p, x0, y0, root, r, 0);
+    this->drawSeq(p);
 }
 Widget::~Widget()
 {

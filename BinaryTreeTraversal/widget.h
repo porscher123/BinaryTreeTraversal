@@ -13,7 +13,7 @@
 #include <QMap>
 #include <QPair>
 #include <QIcon>
-
+#include <QQueue>
 
 class Widget : public QWidget
 {
@@ -65,6 +65,7 @@ private:
     QPushButton *btnPreOrder;
     QPushButton *btnInOrder;
     QPushButton *btnPostOrder;
+    QPushButton *btnLevelOrder;
     void setButton();
 
 
@@ -93,9 +94,16 @@ private:
     void postOrder();
     void postOrder(int u);
 
+    void levelOrder();
+
     // 默认第一条边的左端点为根
     int root = 0;
     void getRoot();
+
+    // 遍历序列
+    QLabel *labelSeqName;
+    QVector<int> seq;
+    void drawSeq(QPainter& p);
 
 };
 #endif // WIDGET_H
